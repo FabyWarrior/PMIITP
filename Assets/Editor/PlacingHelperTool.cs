@@ -19,7 +19,13 @@ public class PlacingHelperTool : EditorWindow{
 	bool RandomRotationY;
 	bool RandomRotationZ;
 
-	[MenuItem("Window/Placing Helper")]
+    //Brushes
+    AnimBool brushesFoldoutBool = new AnimBool();
+    string nameTField;
+    BrushPreset currentBrush;
+    float timeTillNextStroke;
+
+    [MenuItem("Window/Placing Helper")]
 	static void CreateWindow(){
 		GetWindow<PlacingHelperTool> ().Show ();
 	}
@@ -29,6 +35,8 @@ public class PlacingHelperTool : EditorWindow{
 		gameObjectsFoldoutBool.valueChanged.AddListener (Repaint);
 		placingFoldoutBool = new AnimBool ();
 		placingFoldoutBool.valueChanged.AddListener (Repaint);
+        brushesFoldoutBool = new AnimBool();
+        brushesFoldoutBool.valueChanged.AddListener (Repaint);
 
         //Esto hace que cada vez que se dispare un evento en la ventana Scene, se llame al metodo OnSceneGUI
         SceneView.onSceneGUIDelegate += OnSceneGUI;
@@ -78,35 +86,59 @@ public class PlacingHelperTool : EditorWindow{
 			RandomRotationZ = EditorGUILayout.Toggle ("Random Z Rotation", RandomRotationZ);
 		}
 		EditorGUILayout.EndFadeGroup ();
-	}
+
+        //Brushes
+        brushesFoldoutBool.target = EditorGUILayout.Foldout(brushesFoldoutBool.target, "Brushes");
+        if (EditorGUILayout.BeginFadeGroup(brushesFoldoutBool.faded))
+        {
+            EditorGUILayout.BeginHorizontal();
+            nameTField = EditorGUILayout.TextField(nameTField,GUILayout.Width(200));
+            if (GUILayout.Button("New Brush",GUILayout.Width(100)))
+            {
+                BrushPresetFactory.CreateBrush<BrushPreset>(nameTField);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("-------------------------------------------");
+            currentBrush = (BrushPreset)EditorGUILayout.ObjectField(currentBrush, typeof(BrushPreset), false);
+        }
+        EditorGUILayout.EndFadeGroup();
+    }
 
     void OnSceneGUI(SceneView sceneView)
     {
         Event current = Event.current;
-
-        //Pregunta si se hizo click izquierdo en la ventana scene, y si hay algun gameObject en la lista para instanciar
-        if(current.type == EventType.MouseDown && current.button == 0 && placingGO.Count > 0)
+        
+        if(current.type == EventType.MouseDown && current.button == 0 && currentBrush != null)
         {
-            //Crea un ray que va desde el lugar en el que se hizo click, hacia el mundo.
-            Ray mouseRay = HandleUtility.GUIPointToWorldRay(current.mousePosition);
-            RaycastHit hitInfo;
-
-            //Dispara el raycast
-            if (Physics.Raycast(mouseRay, out hitInfo, 10000))
+            if (currentBrush.burstMode)
             {
-                //Instancio el objeto guardado en la lista y guardo la referencia.
-                GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab(placingGO[0]);
+                Ray mouseRay = HandleUtility.GUIPointToWorldRay(current.mousePosition);
+                RaycastHit hitInfo;
 
-                //Posiciono el objeto en el lugar en que pegó el raycast
-                instObj.transform.position = hitInfo.point;
+                if (Physics.Raycast(mouseRay, out hitInfo, 10000))
+                {
+                    for (int i = 0; i < currentBrush.burstQuantity; i++)
+                    {
+                        GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab(currentBrush.paintingObjs[Random.Range(0, currentBrush.paintingObjs.Count + 1)]);
+                        instObj.transform.position = hitInfo.point + new Vector3(Random.Range(0, currentBrush.randomXOffset),
+                                                                                 Random.Range(0, currentBrush.randomYOffset),
+                                                                                 Random.Range(0, currentBrush.randomZOffset));
+                        if(currentBrush.randomRotation)
+                        {
+                            instObj.transform.rotation = new Quaternion(Random.Range(0, currentBrush.randomXRotation),
+                                                                        Random.Range(0, currentBrush.randomYRotation),
+                                                                        Random.Range(0, currentBrush.randomZRotation), 0);
+                        }
+                        EditorUtility.SetDirty(instObj);
+                    }     
+                    current.Use();
+                }
+            }
+            else
+            {
 
-                //Establece el nuevo objeto como dirty.
-                EditorUtility.SetDirty(instObj);
             }
         }
-
-        //Consume el evento para que no se siga propagando por el editor. Basicamente lo marca como "usado".
-        current.Use();
     }
 
 	void OnDisable()
@@ -116,5 +148,6 @@ public class PlacingHelperTool : EditorWindow{
 
 		gameObjectsFoldoutBool.valueChanged.RemoveListener (Repaint);
 		placingFoldoutBool.valueChanged.RemoveListener (Repaint);
+        brushesFoldoutBool.valueChanged.RemoveListener(Repaint);
     }
 }
