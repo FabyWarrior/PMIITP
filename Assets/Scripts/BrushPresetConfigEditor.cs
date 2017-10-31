@@ -16,7 +16,6 @@ public class BrushPresetConfigEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        _target.burstMode = EditorGUILayout.Toggle("Burst Mode", _target.burstMode);
         _target.burstQuantity = EditorGUILayout.IntField("Burst Quantity", _target.burstQuantity);
         if(_target.burstQuantity <= 0) { _target.burstQuantity = 1; }
         EditorGUILayout.LabelField("----------------------------------------");
@@ -60,6 +59,6 @@ public class BrushPresetConfigEditor : Editor
             _target.paintingObjs.Add(objToAdd);
             removeFromList.Add(false);
         }
-        Repaint();       
+        Repaint();
     }
 }

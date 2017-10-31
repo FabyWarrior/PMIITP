@@ -34,6 +34,8 @@ public class PlacingHelperTool : EditorWindow{
     string nameTField;
     BrushPreset currentBrush;
 
+	Vector2 scroll;
+
     [MenuItem("Window/Placing Helper")]
 	static void CreateWindow(){
 		GetWindow<PlacingHelperTool> ().Show ();
@@ -56,6 +58,8 @@ public class PlacingHelperTool : EditorWindow{
     void OnGUI(){
 		EditorGUILayout.LabelField ("Helper", EditorStyles.helpBox);
 
+		EditorGUILayout.BeginVertical ();
+		scroll = EditorGUILayout.BeginScrollView (scroll, false, true, GUILayout.Height (position.height - 25), GUILayout.Width(position.width));
         /*//GameObjects Stuff
 		gameObjectsFoldoutBool.target = EditorGUILayout.Foldout (gameObjectsFoldoutBool.target, "Game objects");
 		if(EditorGUILayout.BeginFadeGroup (gameObjectsFoldoutBool.faded)){
@@ -118,76 +122,118 @@ public class PlacingHelperTool : EditorWindow{
 
         //Brushes
         brushesFoldoutBool.target = EditorGUILayout.Foldout(brushesFoldoutBool.target, "Brushes");
-        if (EditorGUILayout.BeginFadeGroup(brushesFoldoutBool.faded))
-        {
-            EditorGUILayout.BeginHorizontal();
-            nameTField = EditorGUILayout.TextField(nameTField,GUILayout.Width(200));
-            if (GUILayout.Button("New Brush",GUILayout.Width(100)))
-            {
-                BrushPresetFactory.CreateBrush<BrushPreset>(nameTField);
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField("-------------------------------------------");
-            currentBrush = (BrushPreset)EditorGUILayout.ObjectField(currentBrush, typeof(BrushPreset), false);
-        }
+		if (EditorGUILayout.BeginFadeGroup (brushesFoldoutBool.faded)) {
+			EditorGUILayout.BeginHorizontal ();
+			if (GUILayout.Button ("New Brush")) {
+				CreateBrushWindow.CreateBrush ();
+			}
+			EditorGUILayout.EndHorizontal ();
+			EditorGUILayout.LabelField ("-------------------------------------------");
+			currentBrush = (BrushPreset)EditorGUILayout.ObjectField (currentBrush, typeof(BrushPreset), false);
+        
+
+			currentBrush.burstQuantity = EditorGUILayout.IntField ("Burst Quantity", currentBrush.burstQuantity);
+			if (currentBrush.burstQuantity <= 0) {
+				currentBrush.burstQuantity = 1;
+			}
+			EditorGUILayout.LabelField ("----------------------------------------");
+			currentBrush.randomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.randomRotation);
+			currentBrush.randomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.randomXRotation, 0f, 360f);
+			currentBrush.randomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.randomYRotation, 0f, 360f);
+			currentBrush.randomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.randomZRotation, 0f, 360f);
+			EditorGUILayout.LabelField ("----------------------------------------");
+			currentBrush.randomXOffset = EditorGUILayout.FloatField ("X Offset", currentBrush.randomXOffset);
+			if (currentBrush.randomXOffset < 0f) {
+				currentBrush.randomXOffset = 0f;
+			}
+			currentBrush.randomYOffset = EditorGUILayout.FloatField ("Y Offset", currentBrush.randomYOffset);
+			if (currentBrush.randomYOffset < 0f) {
+				currentBrush.randomYOffset = 0f;
+			}
+			currentBrush.randomZOffset = EditorGUILayout.FloatField ("Z Offset", currentBrush.randomZOffset);
+			if (currentBrush.randomZOffset < 0f) {
+				currentBrush.randomZOffset = 0f;
+			}
+			EditorGUILayout.LabelField ("----------------------------------------");
+			currentBrush.spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.spacing);
+			if (currentBrush.spacing < 0.25f) {
+				currentBrush.spacing = 0.25f;
+			}
+			EditorGUILayout.LabelField ("----------------------------------------");
+			EditorGUILayout.LabelField ("Painting Objects");
+			var remPlz = new List<bool> ();
+			for (int i = 0; i < currentBrush.paintingObjs.Count; i++) {
+				EditorGUILayout.BeginHorizontal ();
+				currentBrush.paintingObjs [i] = (GameObject)EditorGUILayout.ObjectField (currentBrush.paintingObjs [i], typeof(GameObject), true, GUILayout.Width (100));
+				remPlz [i] = GUILayout.Button ("Remove");
+				EditorGUILayout.EndHorizontal ();
+			}
+			for (int i = remPlz.Count - 1; i >= 0; i--) {
+				if (remPlz [i]) {
+					currentBrush.paintingObjs.RemoveAt (i);
+					remPlz.RemoveAt (i);
+				}
+			}
+			var objToAdd = (GameObject)EditorGUILayout.ObjectField (null, typeof(GameObject), true);
+			if (objToAdd != null) {
+				currentBrush.paintingObjs.Add (objToAdd);
+				remPlz.Add (false);
+			}
+		}
         EditorGUILayout.EndFadeGroup();
 
 		string[] layers = new string[32]; //32 = maxLayers
 		for (int i = 0; i < 32; i++) {
 			layers[i] = LayerMask.LayerToName (i);
 		}
-		paintingMask = EditorGUILayout.MaskField ("Painting Layer", paintingMask,layers.Reverse().SkipWhile(x => x == "").Reverse().ToArray());
+		paintingMask = EditorGUILayout.MaskField ("Painting Layer", paintingMask,layers.Reverse().SkipWhile(x => x == "").Reverse().ToArray(), GUILayout.Width(position.width - 25));
 
 
         //Them buttons stuff
 		EditorGUILayout.BeginHorizontal ();
 		GUI.color = clickNAdd? Color.green: Color.white;
-		if (GUILayout.Button(clickNAdd ? "Stop painting" : "Click Paint", GUILayout.Width(position.width / 2))){
+		if (GUILayout.Button(clickNAdd ? "Stop painting" : "Click Paint", GUILayout.Width(position.width / 2 - 15))){
 			clickNAdd = !clickNAdd;
 			clickNDrag = false;
 		}
 		GUI.color = clickNDrag ? Color.green : Color.white;
-		if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", GUILayout.Width(position.width / 2))) {
+		if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", GUILayout.Width(position.width / 2 - 15))) {
 			clickNDrag = !clickNDrag;
 			clickNAdd = false;
 		}
 		GUI.color = Color.white;
 		EditorGUILayout.EndHorizontal();
+
+		EditorGUILayout.EndScrollView ();
+		EditorGUILayout.EndVertical ();
 	}
 
     void OnSceneGUI(SceneView sceneView)
     {
 		Event c = Event.current;
 
-        if(clickNAdd && c.type == EventType.MouseDown && c.button == 0 && currentBrush != null)
-        {
-            if (currentBrush.burstMode)
-            {
-                Ray mouseRay = HandleUtility.GUIPointToWorldRay(c.mousePosition);
-                RaycastHit hitInfo;
+		if (clickNAdd && c.type == EventType.MouseDown && c.button == 0 && currentBrush != null) {
+			Ray mouseRay = HandleUtility.GUIPointToWorldRay (c.mousePosition);
+			RaycastHit hitInfo;
 
-                if (Physics.Raycast(mouseRay, out hitInfo, 10000))
-                {
-                    for (int i = 0; i < currentBrush.burstQuantity; i++)
-                    {
-                        GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab(currentBrush.paintingObjs[Random.Range(0, currentBrush.paintingObjs.Count)]);
-						instObj.transform.position = hitInfo.point + new Vector3 (
-							Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
-							Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
-							Random.Range (-currentBrush.randomZOffset, currentBrush.randomZOffset));
-                        if(currentBrush.randomRotation)
-                        {
-							instObj.transform.rotation = new Quaternion (
-								Random.Range (-currentBrush.randomXRotation, currentBrush.randomXRotation),
-								Random.Range (-currentBrush.randomYRotation, currentBrush.randomYRotation),
-								Random.Range (-currentBrush.randomZRotation, currentBrush.randomZRotation), 0);
-                        }
-                        EditorUtility.SetDirty(instObj);
-                    }     
-                    c.Use();
-                }
-            }
-        }
+			if (Physics.Raycast (mouseRay, out hitInfo, 10000)) {
+				for (int i = 0; i < currentBrush.burstQuantity; i++) {
+					GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab (currentBrush.paintingObjs [Random.Range (0, currentBrush.paintingObjs.Count)]);
+					instObj.transform.position = hitInfo.point + new Vector3 (
+						Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
+						Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
+						Random.Range (-currentBrush.randomZOffset, currentBrush.randomZOffset));
+					if (currentBrush.randomRotation) {
+						instObj.transform.rotation = new Quaternion (
+							Random.Range (-currentBrush.randomXRotation, currentBrush.randomXRotation),
+							Random.Range (-currentBrush.randomYRotation, currentBrush.randomYRotation),
+							Random.Range (-currentBrush.randomZRotation, currentBrush.randomZRotation), 0);
+					}
+					EditorUtility.SetDirty (instObj);
+				}     
+				c.Use ();
+			}
+		}
 		if (clickNDrag) {
 			HandleUtility.AddDefaultControl (GUIUtility.GetControlID (FocusType.Passive));
 			if (c.type == EventType.mouseDown && c.button == 0)
