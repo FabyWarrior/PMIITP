@@ -220,6 +220,7 @@ public class PlacingHelperTool : EditorWindow{
 			if (Physics.Raycast (mouseRay, out hitInfo, 10000)) {
 				for (int i = 0; i < currentBrush.burstQuantity; i++) {
 					GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab (currentBrush.paintingObjs [Random.Range (0, currentBrush.paintingObjs.Count)]);
+                    Undo.RegisterCreatedObjectUndo(instObj, "Object Painted");
 					instObj.transform.position = hitInfo.point + new Vector3 (
 						Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
 						Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
@@ -251,7 +252,8 @@ public class PlacingHelperTool : EditorWindow{
 						for (int i = 0; i < currentBrush.burstQuantity; i++)
 						{
 							GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab(currentBrush.paintingObjs[Random.Range(0, currentBrush.paintingObjs.Count)]);
-							instObj.transform.position = rc.point + new Vector3 (
+                            Undo.RegisterCreatedObjectUndo(instObj, "Object Painted");
+                            instObj.transform.position = rc.point + new Vector3 (
 								Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
 								Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
 								Random.Range (-currentBrush.randomZOffset, currentBrush.randomZOffset));
