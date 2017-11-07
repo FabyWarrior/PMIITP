@@ -121,7 +121,7 @@ public class PlacingHelperTool : EditorWindow{
 		EditorGUILayout.EndFadeGroup ();*/
 
         //Brushes
-        brushesFoldoutBool.target = EditorGUILayout.Foldout(brushesFoldoutBool.target, "Brushes");
+		brushesFoldoutBool.target = EditorGUILayout.Foldout (brushesFoldoutBool.target, "Brushes");
 		if (EditorGUILayout.BeginFadeGroup (brushesFoldoutBool.faded)) {
 			EditorGUILayout.BeginHorizontal ();
 			if (GUILayout.Button ("New Brush")) {
@@ -129,58 +129,59 @@ public class PlacingHelperTool : EditorWindow{
 			}
 			EditorGUILayout.EndHorizontal ();
 			EditorGUILayout.LabelField ("-------------------------------------------");
-			currentBrush = (BrushPreset)EditorGUILayout.ObjectField (currentBrush, typeof(BrushPreset), false);
-        
 
-			currentBrush.burstQuantity = EditorGUILayout.IntField ("Burst Quantity", currentBrush.burstQuantity);
-			if (currentBrush.burstQuantity <= 0) {
-				currentBrush.burstQuantity = 1;
-			}
-			EditorGUILayout.LabelField ("----------------------------------------");
-			currentBrush.randomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.randomRotation);
-			currentBrush.randomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.randomXRotation, 0f, 360f);
-			currentBrush.randomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.randomYRotation, 0f, 360f);
-			currentBrush.randomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.randomZRotation, 0f, 360f);
-			EditorGUILayout.LabelField ("----------------------------------------");
-			currentBrush.randomXOffset = EditorGUILayout.FloatField ("X Offset", currentBrush.randomXOffset);
-			if (currentBrush.randomXOffset < 0f) {
-				currentBrush.randomXOffset = 0f;
-			}
-			currentBrush.randomYOffset = EditorGUILayout.FloatField ("Y Offset", currentBrush.randomYOffset);
-			if (currentBrush.randomYOffset < 0f) {
-				currentBrush.randomYOffset = 0f;
-			}
-			currentBrush.randomZOffset = EditorGUILayout.FloatField ("Z Offset", currentBrush.randomZOffset);
-			if (currentBrush.randomZOffset < 0f) {
-				currentBrush.randomZOffset = 0f;
-			}
-			EditorGUILayout.LabelField ("----------------------------------------");
-			currentBrush.spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.spacing);
-			if (currentBrush.spacing < 0.25f) {
-				currentBrush.spacing = 0.25f;
-			}
-			EditorGUILayout.LabelField ("----------------------------------------");
-			EditorGUILayout.LabelField ("Painting Objects");
-			var remPlz = new List<bool> ();
-			for (int i = 0; i < currentBrush.paintingObjs.Count; i++) {
-				EditorGUILayout.BeginHorizontal ();
-				currentBrush.paintingObjs [i] = (GameObject)EditorGUILayout.ObjectField (currentBrush.paintingObjs [i], typeof(GameObject), true, GUILayout.Width (100));
-				remPlz [i] = GUILayout.Button ("Remove");
-				EditorGUILayout.EndHorizontal ();
-			}
-			for (int i = remPlz.Count - 1; i >= 0; i--) {
-				if (remPlz [i]) {
-					currentBrush.paintingObjs.RemoveAt (i);
-					remPlz.RemoveAt (i);
+			currentBrush = (BrushPreset)EditorGUILayout.ObjectField (currentBrush, typeof(BrushPreset), false);
+			if (currentBrush != null) {
+				currentBrush.burstQuantity = EditorGUILayout.IntField ("Burst Quantity", currentBrush.burstQuantity);
+				if (currentBrush.burstQuantity <= 0) {
+					currentBrush.burstQuantity = 1;
 				}
-			}
-			var objToAdd = (GameObject)EditorGUILayout.ObjectField (null, typeof(GameObject), true);
-			if (objToAdd != null) {
-				currentBrush.paintingObjs.Add (objToAdd);
-				remPlz.Add (false);
+				EditorGUILayout.LabelField ("----------------------------------------");
+				currentBrush.randomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.randomRotation);
+				currentBrush.randomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.randomXRotation, 0f, 360f);
+				currentBrush.randomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.randomYRotation, 0f, 360f);
+				currentBrush.randomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.randomZRotation, 0f, 360f);
+				EditorGUILayout.LabelField ("----------------------------------------");
+				currentBrush.randomXOffset = EditorGUILayout.FloatField ("X Offset", currentBrush.randomXOffset);
+				if (currentBrush.randomXOffset < 0f) {
+					currentBrush.randomXOffset = 0f;
+				}
+				currentBrush.randomYOffset = EditorGUILayout.FloatField ("Y Offset", currentBrush.randomYOffset);
+				if (currentBrush.randomYOffset < 0f) {
+					currentBrush.randomYOffset = 0f;
+				}
+				currentBrush.randomZOffset = EditorGUILayout.FloatField ("Z Offset", currentBrush.randomZOffset);
+				if (currentBrush.randomZOffset < 0f) {
+					currentBrush.randomZOffset = 0f;
+				}
+				EditorGUILayout.LabelField ("----------------------------------------");
+				currentBrush.spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.spacing);
+				if (currentBrush.spacing < 0.25f) {
+					currentBrush.spacing = 0.25f;
+				}
+				EditorGUILayout.LabelField ("----------------------------------------");
+				EditorGUILayout.LabelField ("Painting Objects");
+				var remPlz = new bool[currentBrush.paintingObjs.Count];
+				for (int i = 0; i < currentBrush.paintingObjs.Count; i++) {
+					EditorGUILayout.BeginHorizontal ();
+					currentBrush.paintingObjs [i] = (GameObject)EditorGUILayout.ObjectField (currentBrush.paintingObjs [i], typeof(GameObject), true, GUILayout.Width (100));
+					remPlz [i] = GUILayout.Button ("Remove");
+					EditorGUILayout.EndHorizontal ();
+				}
+				for (int i = remPlz.Length - 1; i >= 0; i--) {
+					if (remPlz [i]) {
+						currentBrush.paintingObjs.RemoveAt (i);
+					}
+				}
+				var objToAdd = (GameObject)EditorGUILayout.ObjectField (null, typeof(GameObject), true);
+				if (objToAdd != null) {
+					currentBrush.paintingObjs.Add (objToAdd);
+				}
+			} else {
+				EditorGUILayout.HelpBox ("No brush selected", MessageType.Warning);
 			}
 		}
-        EditorGUILayout.EndFadeGroup();
+		EditorGUILayout.EndFadeGroup ();
 
 		string[] layers = new string[32]; //32 = maxLayers
 		for (int i = 0; i < 32; i++) {
@@ -238,7 +239,7 @@ public class PlacingHelperTool : EditorWindow{
 			HandleUtility.AddDefaultControl (GUIUtility.GetControlID (FocusType.Passive));
 			if (c.type == EventType.mouseDown && c.button == 0)
 				mouseDown = true;
-			else if (c.type == EventType.mouseUp && c.button == 0)
+			else if (c.type == EventType.mouseUp)
 				mouseDown = false;
 			if(mouseDown){
 				RaycastHit rc;
