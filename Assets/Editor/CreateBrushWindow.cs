@@ -21,23 +21,19 @@ public class CreateBrushWindow : EditorWindow {
 	void OnGUI(){
 		scroll = EditorGUILayout.BeginScrollView (scroll, false, false);
 		newBrush.Name = EditorGUILayout.TextField ("Name: ", newBrush.Name);
-		newBrush.burstQuantity = EditorGUILayout.IntField("Burst Quantity", newBrush.burstQuantity);
-		if(newBrush.burstQuantity <= 0) { newBrush.burstQuantity = 1; }
+		newBrush.BurstQuantity = EditorGUILayout.IntField("Burst Quantity", newBrush.BurstQuantity);
+		if(newBrush.BurstQuantity <= 0)  newBrush.BurstQuantity = 1; 
 		EditorGUILayout.LabelField("----------------------------------------");
-		newBrush.randomRotation = EditorGUILayout.Toggle("Random Rotation", newBrush.randomRotation);
-		newBrush.randomXRotation = EditorGUILayout.Slider("X Rotation", newBrush.randomXRotation, 0f, 360f);
-		newBrush.randomYRotation = EditorGUILayout.Slider("Y Rotation", newBrush.randomYRotation, 0f, 360f);
-		newBrush.randomZRotation = EditorGUILayout.Slider("Z Rotation", newBrush.randomZRotation, 0f, 360f);
+		newBrush.RandomRotation = EditorGUILayout.Toggle("Random Rotation", newBrush.RandomRotation);
+		newBrush.RandomXRotation = EditorGUILayout.Slider("X Rotation", newBrush.RandomXRotation, 0f, 360f);
+		newBrush.RandomYRotation = EditorGUILayout.Slider("Y Rotation", newBrush.RandomYRotation, 0f, 360f);
+		newBrush.RandomZRotation = EditorGUILayout.Slider("Z Rotation", newBrush.RandomZRotation, 0f, 360f);
 		EditorGUILayout.LabelField("----------------------------------------");
-		newBrush.randomXOffset = EditorGUILayout.FloatField("X Offset", newBrush.randomXOffset);
-		if (newBrush.randomXOffset < 0f) { newBrush.randomXOffset = 0f; }
-		newBrush.randomYOffset = EditorGUILayout.FloatField("Y Offset", newBrush.randomYOffset);
-		if (newBrush.randomYOffset < 0f) { newBrush.randomYOffset = 0f; }
-		newBrush.randomZOffset = EditorGUILayout.FloatField("Z Offset", newBrush.randomZOffset);
-		if (newBrush.randomZOffset < 0f) { newBrush.randomZOffset = 0f; }
+		newBrush.Spread = EditorGUILayout.FloatField ("Spread", newBrush.Spread);
+		if (newBrush.Spread < 0f) { newBrush.Spread = 0f; }
 		EditorGUILayout.LabelField("----------------------------------------");
-		newBrush.spacing = EditorGUILayout.FloatField("Spacing", newBrush.spacing);
-		if(newBrush.spacing < 0.25f) { newBrush.spacing = 0.25f; }
+		newBrush.Spacing = EditorGUILayout.FloatField("Spacing", newBrush.Spacing);
+		if(newBrush.Spacing < 0.25f)  newBrush.Spacing = 0.25f; 
 		EditorGUILayout.LabelField("----------------------------------------");
 		EditorGUILayout.LabelField("Painting Objects");
 

@@ -6,15 +6,13 @@ public class BrushPreset : ScriptableObject
 {
     public List<GameObject> paintingObjs;
 	public string Name;
-    public int burstQuantity;
-    public float spacing;
-    public float randomXOffset;
-    public float randomYOffset;
-    public float randomZOffset;
-    public bool randomRotation;
-    [Range(0f, 360f)] public float randomXRotation;
-    [Range(0f, 360f)] public float randomYRotation;
-    [Range(0f, 360f)] public float randomZRotation;
+    public int BurstQuantity;
+    public float Spacing;
+    public float Spread;
+    public bool RandomRotation;
+    [Range(0f, 360f)] public float RandomXRotation;
+    [Range(0f, 360f)] public float RandomYRotation;
+    [Range(0f, 360f)] public float RandomZRotation;
 
 	public BrushPreset(){
 		paintingObjs = new List<GameObject> ();

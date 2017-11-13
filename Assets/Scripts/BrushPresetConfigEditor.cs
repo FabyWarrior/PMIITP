@@ -6,8 +6,8 @@ using UnityEditor;
 [CustomEditor(typeof(BrushPreset))]
 public class BrushPresetConfigEditor : Editor
 {
-    private BrushPreset _target;
-    private List<bool> removeFromList = new List<bool>();
+    BrushPreset _target;
+    List<bool> removeFromList = new List<bool>();
 
     void OnEnable()
     {
@@ -16,23 +16,19 @@ public class BrushPresetConfigEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        _target.burstQuantity = EditorGUILayout.IntField("Burst Quantity", _target.burstQuantity);
-        if(_target.burstQuantity <= 0) { _target.burstQuantity = 1; }
+        _target.BurstQuantity = EditorGUILayout.IntField("Burst Quantity", _target.BurstQuantity);
+        if(_target.BurstQuantity <= 0) { _target.BurstQuantity = 1; }
         EditorGUILayout.LabelField("----------------------------------------");
-        _target.randomRotation = EditorGUILayout.Toggle("Random Rotation", _target.randomRotation);
-        _target.randomXRotation = EditorGUILayout.Slider("X Rotation", _target.randomXRotation, 0f, 360f);
-        _target.randomYRotation = EditorGUILayout.Slider("Y Rotation", _target.randomYRotation, 0f, 360f);
-        _target.randomZRotation = EditorGUILayout.Slider("Z Rotation", _target.randomZRotation, 0f, 360f);
+        _target.RandomRotation = EditorGUILayout.Toggle("Random Rotation", _target.RandomRotation);
+        _target.RandomXRotation = EditorGUILayout.Slider("X Rotation", _target.RandomXRotation, 0f, 360f);
+        _target.RandomYRotation = EditorGUILayout.Slider("Y Rotation", _target.RandomYRotation, 0f, 360f);
+        _target.RandomZRotation = EditorGUILayout.Slider("Z Rotation", _target.RandomZRotation, 0f, 360f);
         EditorGUILayout.LabelField("----------------------------------------");
-        _target.randomXOffset = EditorGUILayout.FloatField("X Offset", _target.randomXOffset);
-        if (_target.randomXOffset < 0f) { _target.randomXOffset = 0f; }
-        _target.randomYOffset = EditorGUILayout.FloatField("Y Offset", _target.randomYOffset);
-        if (_target.randomYOffset < 0f) { _target.randomYOffset = 0f; }
-        _target.randomZOffset = EditorGUILayout.FloatField("Z Offset", _target.randomZOffset);
-        if (_target.randomZOffset < 0f) { _target.randomZOffset = 0f; }
+		_target.Spread = EditorGUILayout.FloatField ("Spacing", _target.Spread);
+		if(_target.Spread < 0)  _target.Spread = 0;
         EditorGUILayout.LabelField("----------------------------------------");
-        _target.spacing = EditorGUILayout.FloatField("Spacing", _target.spacing);
-        if(_target.spacing < 0.25f) { _target.spacing = 0.25f; }
+        _target.Spacing = EditorGUILayout.FloatField("Spacing", _target.Spacing);
+        if(_target.Spacing < 0.25f) { _target.Spacing = 0.25f; }
         EditorGUILayout.LabelField("----------------------------------------");
         EditorGUILayout.LabelField("Painting Objects");
         for (int i = 0; i < _target.paintingObjs.Count; i++)

@@ -7,6 +7,8 @@ using System.Linq;
 
 public class PlacingHelperTool : EditorWindow{
 
+	//Go
+	static List<GameObject> paintedGO;
 
 	//GameObjects
 	List<GameObject> placingGO = new List<GameObject> ();
@@ -16,22 +18,16 @@ public class PlacingHelperTool : EditorWindow{
 
 	//Placing
 	AnimBool placingFoldoutBool = new AnimBool();
-	bool randomRotationX;
-	bool randomRotationY;
-	bool randomRotationZ;
-	bool randomScaleX;
-	bool randomScaleY;
-	bool randomScaleZ;
 	int paintingMask;
 
 
 	//Painting
 	bool clickNAdd;
 	bool clickNDrag;
+	bool erasing;
 
     //Brushes
     AnimBool brushesFoldoutBool = new AnimBool();
-    string nameTField;
     BrushPreset currentBrush;
 
 	Vector2 scroll;
@@ -42,6 +38,7 @@ public class PlacingHelperTool : EditorWindow{
 	}
 	
 	void OnEnable(){
+		paintedGO = paintedGO ?? new List<GameObject> ();
 		gameObjectsFoldoutBool = new AnimBool ();
 		gameObjectsFoldoutBool.valueChanged.AddListener (Repaint);
 		placingFoldoutBool = new AnimBool ();
@@ -59,8 +56,8 @@ public class PlacingHelperTool : EditorWindow{
 		EditorGUILayout.LabelField ("Helper", EditorStyles.helpBox);
 
 		EditorGUILayout.BeginVertical ();
-		scroll = EditorGUILayout.BeginScrollView (scroll, false, true, GUILayout.Height (position.height - 25), GUILayout.Width(position.width));
-        /*//GameObjects Stuff
+		scroll = EditorGUILayout.BeginScrollView (scroll, false, true, GUILayout.Height (position.height - 25), GUILayout.Width (position.width));
+		/*//GameObjects Stuff
 		gameObjectsFoldoutBool.target = EditorGUILayout.Foldout (gameObjectsFoldoutBool.target, "Game objects");
 		if(EditorGUILayout.BeginFadeGroup (gameObjectsFoldoutBool.faded)){
 			EditorGUILayout.BeginHorizontal ();
@@ -120,7 +117,7 @@ public class PlacingHelperTool : EditorWindow{
 		}
 		EditorGUILayout.EndFadeGroup ();*/
 
-        //Brushes
+		//Brushes
 		brushesFoldoutBool.target = EditorGUILayout.Foldout (brushesFoldoutBool.target, "Brushes");
 		if (EditorGUILayout.BeginFadeGroup (brushesFoldoutBool.faded)) {
 			EditorGUILayout.BeginHorizontal ();
@@ -132,32 +129,24 @@ public class PlacingHelperTool : EditorWindow{
 
 			currentBrush = (BrushPreset)EditorGUILayout.ObjectField (currentBrush, typeof(BrushPreset), false);
 			if (currentBrush != null) {
-				currentBrush.burstQuantity = EditorGUILayout.IntField ("Burst Quantity", currentBrush.burstQuantity);
-				if (currentBrush.burstQuantity <= 0) {
-					currentBrush.burstQuantity = 1;
+				currentBrush.BurstQuantity = EditorGUILayout.IntField ("Burst Quantity", currentBrush.BurstQuantity);
+				if (currentBrush.BurstQuantity <= 0) {
+					currentBrush.BurstQuantity = 1;
 				}
 				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.randomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.randomRotation);
-				currentBrush.randomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.randomXRotation, 0f, 360f);
-				currentBrush.randomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.randomYRotation, 0f, 360f);
-				currentBrush.randomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.randomZRotation, 0f, 360f);
+				currentBrush.RandomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.RandomRotation);
+				currentBrush.RandomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.RandomXRotation, 0f, 360f);
+				currentBrush.RandomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.RandomYRotation, 0f, 360f);
+				currentBrush.RandomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.RandomZRotation, 0f, 360f);
 				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.randomXOffset = EditorGUILayout.FloatField ("X Offset", currentBrush.randomXOffset);
-				if (currentBrush.randomXOffset < 0f) {
-					currentBrush.randomXOffset = 0f;
-				}
-				currentBrush.randomYOffset = EditorGUILayout.FloatField ("Y Offset", currentBrush.randomYOffset);
-				if (currentBrush.randomYOffset < 0f) {
-					currentBrush.randomYOffset = 0f;
-				}
-				currentBrush.randomZOffset = EditorGUILayout.FloatField ("Z Offset", currentBrush.randomZOffset);
-				if (currentBrush.randomZOffset < 0f) {
-					currentBrush.randomZOffset = 0f;
+				currentBrush.Spread = EditorGUILayout.FloatField ("Spread", currentBrush.Spread);
+				if(currentBrush.Spread < 0){
+					currentBrush.Spread = 0;
 				}
 				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.spacing);
-				if (currentBrush.spacing < 0.25f) {
-					currentBrush.spacing = 0.25f;
+				currentBrush.Spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.Spacing);
+				if (currentBrush.Spacing < 0.25f) {
+					currentBrush.Spacing = 0.25f;
 				}
 				EditorGUILayout.LabelField ("----------------------------------------");
 				EditorGUILayout.LabelField ("Painting Objects");
@@ -185,25 +174,37 @@ public class PlacingHelperTool : EditorWindow{
 
 		string[] layers = new string[32]; //32 = maxLayers
 		for (int i = 0; i < 32; i++) {
-			layers[i] = LayerMask.LayerToName (i);
+			layers [i] = LayerMask.LayerToName (i);
 		}
-		paintingMask = EditorGUILayout.MaskField ("Painting Layer", paintingMask,layers.Reverse().SkipWhile(x => x == "").Reverse().ToArray(), GUILayout.Width(position.width - 25));
+		paintingMask = EditorGUILayout.MaskField ("Painting Layer", paintingMask, layers.Reverse ().SkipWhile (x => x == "").Reverse ().ToArray (), GUILayout.Width (position.width - 25));
 
 
-        //Them buttons stuff
+		//Them buttons stuff
 		EditorGUILayout.BeginHorizontal ();
-		GUI.color = clickNAdd? Color.green: Color.white;
-		if (GUILayout.Button(clickNAdd ? "Stop painting" : "Click Paint", GUILayout.Width(position.width / 2 - 15))){
+		GUI.color = clickNAdd ? Color.green : Color.white;
+		if (GUILayout.Button (clickNAdd ? "Stop painting" : "Click Paint", GUILayout.Width ((position.width - 25) / 3))) {
 			clickNAdd = !clickNAdd;
 			clickNDrag = false;
+			erasing = false;
 		}
 		GUI.color = clickNDrag ? Color.green : Color.white;
-		if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", GUILayout.Width(position.width / 2 - 15))) {
+		if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", GUILayout.Width ((position.width - 25) / 3))) {
 			clickNDrag = !clickNDrag;
 			clickNAdd = false;
+			erasing = false;
+		}
+		GUI.color = erasing ? Color.Lerp (Color.red, Color.white, .4f) : Color.Lerp (Color.red, Color.white, .8f);
+		if (GUILayout.Button (erasing ? "Stop Erasing" : "Erase", GUILayout.Width ((position.width - 25) / 3))) {
+			erasing = !erasing;
+			clickNAdd = false;
+			clickNDrag = false;
 		}
 		GUI.color = Color.white;
-		EditorGUILayout.EndHorizontal();
+		EditorGUILayout.EndHorizontal ();
+		if(GUILayout.Button("Clear Eraser")){
+			paintedGO = new List<GameObject> ();
+		}
+		EditorGUILayout.LabelField ("Eraser GO's: " + paintedGO.Count);
 
 		EditorGUILayout.EndScrollView ();
 		EditorGUILayout.EndVertical ();
@@ -218,59 +219,61 @@ public class PlacingHelperTool : EditorWindow{
 			RaycastHit hitInfo;
 
 			if (Physics.Raycast (mouseRay, out hitInfo, 10000)) {
-				for (int i = 0; i < currentBrush.burstQuantity; i++) {
-					GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab (currentBrush.paintingObjs [Random.Range (0, currentBrush.paintingObjs.Count)]);
-                    Undo.RegisterCreatedObjectUndo(instObj, "Object Painted");
-					instObj.transform.position = hitInfo.point + new Vector3 (
-						Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
-						Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
-						Random.Range (-currentBrush.randomZOffset, currentBrush.randomZOffset));
-					if (currentBrush.randomRotation) {
-						instObj.transform.rotation = new Quaternion (
-							Random.Range (-currentBrush.randomXRotation, currentBrush.randomXRotation),
-							Random.Range (-currentBrush.randomYRotation, currentBrush.randomYRotation),
-							Random.Range (-currentBrush.randomZRotation, currentBrush.randomZRotation), 0);
-					}
-					EditorUtility.SetDirty (instObj);
+				for (int i = 0; i < currentBrush.BurstQuantity; i++) {
+					Spawn (hitInfo.point);
 				}     
 				c.Use ();
 			}
 		}
 		if (clickNDrag) {
 			HandleUtility.AddDefaultControl (GUIUtility.GetControlID (FocusType.Passive));
+			RaycastHit rc;
+			var hit = Physics.Raycast (HandleUtility.GUIPointToWorldRay (c.mousePosition), out rc, 10000, paintingMask);
 			if (c.type == EventType.mouseDown && c.button == 0)
 				mouseDown = true;
 			else if (c.type == EventType.mouseUp)
 				mouseDown = false;
-			if(mouseDown){
-				RaycastHit rc;
-				if(Physics.Raycast(HandleUtility.GUIPointToWorldRay(c.mousePosition), out rc, 10000,paintingMask)){
+
+			if(hit){
+				Handles.DrawWireDisc (rc.point, rc.normal, currentBrush.Spread);
+				if(mouseDown){
 					distAcumSqrd += Vector3.SqrMagnitude (lastMousePos - rc.point);
 					lastMousePos = rc.point;
-					if(distAcumSqrd >= currentBrush.spacing.Sqr()){		//Se cumple la distancia del brush??
+					if(distAcumSqrd >= currentBrush.Spacing.Sqr()){		//Se cumple la distancia del brush??
 						distAcumSqrd = 0;
-						for (int i = 0; i < currentBrush.burstQuantity; i++)
-						{
-							GameObject instObj = (GameObject)PrefabUtility.InstantiatePrefab(currentBrush.paintingObjs[Random.Range(0, currentBrush.paintingObjs.Count)]);
-                            Undo.RegisterCreatedObjectUndo(instObj, "Object Painted");
-                            instObj.transform.position = rc.point + new Vector3 (
-								Random.Range (-currentBrush.randomXOffset, currentBrush.randomXOffset),
-								Random.Range (-currentBrush.randomYOffset, currentBrush.randomYOffset),
-								Random.Range (-currentBrush.randomZOffset, currentBrush.randomZOffset));
-							if(currentBrush.randomRotation)
-							{
-								instObj.transform.rotation = new Quaternion (
-									Random.Range (-currentBrush.randomXRotation, currentBrush.randomXRotation),
-									Random.Range (-currentBrush.randomYRotation, currentBrush.randomYRotation),
-									Random.Range (-currentBrush.randomZRotation, currentBrush.randomZRotation), 0);
-							}
-							EditorUtility.SetDirty(instObj);
+						for (int i = 0; i < currentBrush.BurstQuantity; i++) {
+							Spawn (rc.point);
 						}   
 					}
 				}
 			}
 		}
+		if (erasing) {
+			HandleUtility.AddDefaultControl (GUIUtility.GetControlID (FocusType.Passive));
+			RaycastHit rc;
+			var hit = Physics.Raycast (HandleUtility.GUIPointToWorldRay (c.mousePosition), out rc, 10000, paintingMask);
+			if (c.type == EventType.mouseDown && c.button == 0)
+				mouseDown = true;
+			else if (c.type == EventType.mouseUp)
+				mouseDown = false;
+			if (hit) {
+				Handles.DrawWireDisc (rc.point, rc.normal, currentBrush.Spread * 1.2f);
+				if (mouseDown) {
+					var hitGO = Physics.OverlapSphere (rc.point, currentBrush.Spread * 1.2f).Select(x => x.gameObject).ToList();
+					var borrables = hitGO.Where (x => paintedGO.Any (y => x.gameObject == y)).ToList ();
+					Debug.Log ("Hit:" + hitGO.Count);
+					Debug.Log ("Borrables: " + borrables.Count);
+					for (int i = 0; i < borrables.Count; i++) {
+						paintedGO.Remove (borrables[i].gameObject);
+						DestroyImmediate (borrables[i].gameObject);
+					}
+				}
+			}
+		}
+		Repaint ();
+		SceneView.lastActiveSceneView.Repaint ();
 	}
+
 
 	//Drag'n'Paint vars
 	bool mouseDown;
@@ -283,9 +286,24 @@ public class PlacingHelperTool : EditorWindow{
 	Vector3 GetMouseNormal(Vector2 mousePos) {
 		return Vector3.zero;
 	}
+
+	void Spawn(Vector3 pos){
+		var GO = (GameObject)PrefabUtility.InstantiatePrefab (currentBrush.paintingObjs [Random.Range (0, currentBrush.paintingObjs.Count)]);
+		Undo.RegisterCreatedObjectUndo (GO, "Object Painted");
+		GO.transform.position = pos + new Vector3 (
+			Random.Range (-currentBrush.Spread, currentBrush.Spread),
+			Random.Range (-currentBrush.Spread, currentBrush.Spread),
+			Random.Range (-currentBrush.Spread, currentBrush.Spread));
+		if (currentBrush.RandomRotation) {
+			GO.transform.rotation = new Quaternion (
+				Random.Range (-currentBrush.RandomXRotation, currentBrush.RandomXRotation),
+				Random.Range (-currentBrush.RandomYRotation, currentBrush.RandomYRotation),
+				Random.Range (-currentBrush.RandomZRotation, currentBrush.RandomZRotation), 0);
+		}
+		paintedGO.Add (GO);
+	}
     
-	void OnDisable()
-    {
+	void OnDisable() {
         //Esto remueve el metodo OnSceneGui de la lista de eventos del SceneView.
         SceneView.onSceneGUIDelegate -= OnSceneGUI;
 
