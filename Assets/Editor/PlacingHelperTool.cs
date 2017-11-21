@@ -32,13 +32,38 @@ public class PlacingHelperTool : EditorWindow{
 
 	Vector2 scroll;
 
+    //Styles
+    bool clickNewBrush;
+    GUIStyle uiStyle = new GUIStyle(EditorStyles.helpBox);
+    GUIStyle uiTextStyle = new GUIStyle(EditorStyles.label);
+    GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton);
+    Texture2D uiTexture = new Texture2D(1, 1);
+    Color buttonColorNormal = new Color(0.851f, 0.463f, 0.086f);
+    Color buttonColorActive = new Color(0.855f, 0.529f, 0.212f);
+
     [MenuItem("Window/Placing Helper")]
 	static void CreateWindow(){
 		GetWindow<PlacingHelperTool> ().Show ();
 	}
 	
 	void OnEnable(){
-		paintedGO = paintedGO ?? new List<GameObject> ();
+        uiTexture.SetPixel(0, 0, new Color(0.345f, 0.345f, 0.345f));
+        uiTexture.Apply();
+        uiStyle.normal.background = uiTexture;
+        uiStyle.normal.textColor = Color.white;
+        uiStyle.fontStyle = FontStyle.Bold;
+        uiStyle.alignment = TextAnchor.MiddleCenter;
+
+        uiTextStyle.normal.textColor = Color.white;
+        uiTextStyle.fontStyle = FontStyle.Bold;
+        uiTextStyle.alignment = TextAnchor.MiddleCenter;
+
+        buttonStyle.alignment = TextAnchor.MiddleCenter;
+        buttonStyle.normal.textColor = Color.white;
+        buttonStyle.active.textColor = Color.red;
+        buttonStyle.fontStyle = FontStyle.Bold;
+
+        paintedGO = paintedGO ?? new List<GameObject> ();
 		gameObjectsFoldoutBool = new AnimBool ();
 		gameObjectsFoldoutBool.valueChanged.AddListener (Repaint);
 		placingFoldoutBool = new AnimBool ();
@@ -53,10 +78,10 @@ public class PlacingHelperTool : EditorWindow{
 	}
 
     void OnGUI(){
-		EditorGUILayout.LabelField ("Helper", EditorStyles.helpBox);
-
-		EditorGUILayout.BeginVertical ();
+        EditorGUILayout.LabelField ("Helper", EditorStyles.helpBox);
+        EditorGUILayout.BeginVertical(uiStyle);
 		scroll = EditorGUILayout.BeginScrollView (scroll, false, true, GUILayout.Height (position.height - 25), GUILayout.Width (position.width));
+
 		/*//GameObjects Stuff
 		gameObjectsFoldoutBool.target = EditorGUILayout.Foldout (gameObjectsFoldoutBool.target, "Game objects");
 		if(EditorGUILayout.BeginFadeGroup (gameObjectsFoldoutBool.faded)){
@@ -119,13 +144,21 @@ public class PlacingHelperTool : EditorWindow{
 
 		//Brushes
 		brushesFoldoutBool.target = EditorGUILayout.Foldout (brushesFoldoutBool.target, "Brushes");
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 		if (EditorGUILayout.BeginFadeGroup (brushesFoldoutBool.faded)) {
 			EditorGUILayout.BeginHorizontal ();
-			if (GUILayout.Button ("New Brush")) {
+            GUI.backgroundColor = clickNewBrush ? buttonColorActive : buttonColorNormal;
+            if (GUILayout.Button ("New Brush",buttonStyle)) {
 				CreateBrushWindow.CreateBrush ();
-			}
+                clickNDrag = true;
+            }
+            else
+            {
+                clickNewBrush = false;
+            }
+            GUI.backgroundColor = Color.white;
 			EditorGUILayout.EndHorizontal ();
-			EditorGUILayout.LabelField ("-------------------------------------------");
+			EditorGUILayout.LabelField ("--------------------------------------------------------------------------------", uiTextStyle);
 
 			currentBrush = (BrushPreset)EditorGUILayout.ObjectField (currentBrush, typeof(BrushPreset), false);
 			if (currentBrush != null) {
@@ -133,23 +166,23 @@ public class PlacingHelperTool : EditorWindow{
 				if (currentBrush.BurstQuantity <= 0) {
 					currentBrush.BurstQuantity = 1;
 				}
-				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.RandomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.RandomRotation);
+                EditorGUILayout.LabelField("--------------------------------------------------------------------------------", uiTextStyle);
+                currentBrush.RandomRotation = EditorGUILayout.Toggle ("Random Rotation", currentBrush.RandomRotation);
 				currentBrush.RandomXRotation = EditorGUILayout.Slider ("X Rotation", currentBrush.RandomXRotation, 0f, 360f);
 				currentBrush.RandomYRotation = EditorGUILayout.Slider ("Y Rotation", currentBrush.RandomYRotation, 0f, 360f);
 				currentBrush.RandomZRotation = EditorGUILayout.Slider ("Z Rotation", currentBrush.RandomZRotation, 0f, 360f);
-				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.Spread = EditorGUILayout.FloatField ("Spread", currentBrush.Spread);
+                EditorGUILayout.LabelField("--------------------------------------------------------------------------------", uiTextStyle);
+                currentBrush.Spread = EditorGUILayout.FloatField ("Spread", currentBrush.Spread);
 				if(currentBrush.Spread < 0){
 					currentBrush.Spread = 0;
 				}
-				EditorGUILayout.LabelField ("----------------------------------------");
-				currentBrush.Spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.Spacing);
+                EditorGUILayout.LabelField("--------------------------------------------------------------------------------", uiTextStyle);
+                currentBrush.Spacing = EditorGUILayout.FloatField ("Spacing", currentBrush.Spacing);
 				if (currentBrush.Spacing < 0.25f) {
 					currentBrush.Spacing = 0.25f;
 				}
-				EditorGUILayout.LabelField ("----------------------------------------");
-				EditorGUILayout.LabelField ("Painting Objects");
+                EditorGUILayout.LabelField("--------------------------------------------------------------------------------", uiTextStyle);
+                EditorGUILayout.LabelField ("Painting Objects");
 				var remPlz = new bool[currentBrush.paintingObjs.Count];
 				for (int i = 0; i < currentBrush.paintingObjs.Count; i++) {
 					EditorGUILayout.BeginHorizontal ();
@@ -171,6 +204,7 @@ public class PlacingHelperTool : EditorWindow{
 			}
 		}
 		EditorGUILayout.EndFadeGroup ();
+        EditorGUILayout.EndVertical();
 
 		string[] layers = new string[32]; //32 = maxLayers
 		for (int i = 0; i < 32; i++) {
@@ -181,27 +215,28 @@ public class PlacingHelperTool : EditorWindow{
 
 		//Them buttons stuff
 		EditorGUILayout.BeginHorizontal ();
-		GUI.color = clickNAdd ? Color.green : Color.white;
-		if (GUILayout.Button (clickNAdd ? "Stop painting" : "Click Paint", GUILayout.Width ((position.width - 25) / 3))) {
+		GUI.backgroundColor = clickNAdd ? buttonColorActive : buttonColorNormal;
+		if (GUILayout.Button (clickNAdd ? "Stop painting" : "Click Paint", buttonStyle, GUILayout.Width ((position.width - 25) / 3))) {
 			clickNAdd = !clickNAdd;
 			clickNDrag = false;
 			erasing = false;
 		}
-		GUI.color = clickNDrag ? Color.green : Color.white;
-		if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", GUILayout.Width ((position.width - 25) / 3))) {
+		GUI.backgroundColor = clickNDrag ? buttonColorActive: buttonColorNormal;
+        if (GUILayout.Button (clickNDrag ? "Stop painting" : "Click n' Drag", buttonStyle, GUILayout.Width ((position.width - 25) / 3))) {
 			clickNDrag = !clickNDrag;
 			clickNAdd = false;
 			erasing = false;
 		}
-		GUI.color = erasing ? Color.Lerp (Color.red, Color.white, .4f) : Color.Lerp (Color.red, Color.white, .8f);
-		if (GUILayout.Button (erasing ? "Stop Erasing" : "Erase", GUILayout.Width ((position.width - 25) / 3))) {
+		GUI.backgroundColor = erasing ? buttonColorActive: buttonColorNormal;
+        if (GUILayout.Button (erasing ? "Stop Erasing" : "Erase", buttonStyle, GUILayout.Width ((position.width - 25) / 3))) {
 			erasing = !erasing;
 			clickNAdd = false;
 			clickNDrag = false;
 		}
-		GUI.color = Color.white;
+		GUI.backgroundColor = Color.white;
 		EditorGUILayout.EndHorizontal ();
-		if(GUILayout.Button("Clear Eraser")){
+        GUI.backgroundColor = Color.Lerp(Color.white, Color.red,0.4f);
+		if(GUILayout.Button("Clear Eraser",buttonStyle)){
 			paintedGO = new List<GameObject> ();
 		}
 		EditorGUILayout.LabelField ("Eraser GO's: " + paintedGO.Count);
